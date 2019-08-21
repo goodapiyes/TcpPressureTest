@@ -351,7 +351,6 @@
             this.btnStop.Text = "Stop";
             this.btnStop.TextColor = System.Drawing.Color.White;
             this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
-            // 
             // btnPause
             // 
             this.btnPause.ButtonType = CxFlatUI.ButtonType.Waring;

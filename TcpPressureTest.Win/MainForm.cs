@@ -27,6 +27,7 @@ namespace TcpPressureTest.Win
         private bool _loopConStatus = true;
         private bool _loopStatus = true;
         private Task _connecTask;
+        private string sendData = "hello world\r\n";
         public MainForm()
         {
             InitializeComponent();
@@ -49,6 +50,7 @@ namespace TcpPressureTest.Win
             tbPort.Text = ConfigTool.Get("port");
             tbInterval.Text = ConfigTool.Get("interval");
             tbConCount.Text = ConfigTool.Get("connect");
+            tbData.Text= ConfigTool.Get("senddata");
         }
         private void UpdateAppConfig()
         {
@@ -56,6 +58,7 @@ namespace TcpPressureTest.Win
             ConfigTool.Set("port", tbPort.Text);
             ConfigTool.Set("interval", tbInterval.Text);
             ConfigTool.Set("connect", tbConCount.Text);
+            ConfigTool.Set("senddata", tbData.Text);
         }
         private Task ConnectServer()
         {
@@ -97,6 +100,9 @@ namespace TcpPressureTest.Win
         }
         private void SendData()
         {
+            if(!string.IsNullOrWhiteSpace(tbData.Text))
+                sendData = tbData.Text;
+            sendData = System.Text.RegularExpressions.Regex.Unescape(sendData);
             foreach (var client in _clients)
             {
                 Task task = Task.Run(() =>
@@ -105,12 +111,11 @@ namespace TcpPressureTest.Win
                     {
                         var pipestream = client.Stream.ToPipeStream();
                         var interval = this.tbInterval.Text.ToInt();
-                        var text = new string('x', 1000);
                         while (_loopStatus)
                         {
                             Thread.Sleep(interval < 100 ? 100 : interval);
                             var data = pipestream.ReadToEnd();
-                            pipestream.WriteUTF(text);
+                            pipestream.WriteUTF(sendData);
                             pipestream.Flush();
                             ControlIncrement(lbSendDataCount);
                         }
@@ -171,14 +176,28 @@ namespace TcpPressureTest.Win
             else
                 control.Text = value.ToString();
         }
-
         private void BtnPauseRest()
         {
             btnPause.Text = "Pause";
             btnPause.Enabled = false;
         }
+
+        private void DisConnectCliets()
+        {
+
+            for (int i = _clients.Count - 1; i >= 0; i--)
+            {
+                _clients[i].DisConnect();
+                _clients.Remove(_clients[i]);
+                ControlAssign(lbClientCount, _clients.Count);
+            }
+
+            if (_clients.Count > 0)
+                DisConnectCliets();
+        }
         #endregion
 
+        #region 控件事件
 
         private void btnStart_Click(object sender, EventArgs eventArgs)
         {
@@ -194,7 +213,7 @@ namespace TcpPressureTest.Win
                 task.ContinueWith(t => { SendData(); });
                 btnStart.Enabled = false;
                 btnStop.Enabled = true;
-                
+
             }
             catch (Exception e)
             {
@@ -204,32 +223,32 @@ namespace TcpPressureTest.Win
         }
         private void btnPause_Click(object sender, EventArgs e)
         {
+            btnPause.Enabled = false;
             if (_loopStatus)
             {
                 _loopStatus = false;
+                Thread.Sleep(1000);
                 this.btnPause.Text = "Continue";
             }
             else
             {
                 _loopStatus = true;
+                Thread.Sleep(1000);
                 this.btnPause.Text = "Pause";
                 SendData();
             }
+            btnPause.Enabled = true;
         }
         private void btnStop_Click(object sender, EventArgs eventArgs)
         {
             try
             {
                 btnStop.Enabled = false;
+                btnStop.Text = "Stopping...";
                 _loopConStatus = false;
                 _loopStatus = false;
                 Thread.Sleep(1000);
-                for (int i = _clients.Count - 1; i >= 0; i--)
-                {
-                    _clients[i].DisConnect();
-                    _clients.Remove(_clients[i]);
-                    ControlAssign(lbClientCount, _clients.Count);
-                }
+                DisConnectCliets();
             }
             catch (Exception e)
             {
@@ -239,6 +258,7 @@ namespace TcpPressureTest.Win
             finally
             {
                 BtnPauseRest();
+                btnStop.Text = "Stop";
                 btnStop.Enabled = true;
                 btnStart.Enabled = true;
             }
@@ -246,7 +266,7 @@ namespace TcpPressureTest.Win
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             _loopStatus = false;
-            if (_clients.Count>0)
+            if (_clients.Count > 0)
             {
                 for (int i = _clients.Count - 1; i >= 0; i--)
                 {
@@ -255,9 +275,9 @@ namespace TcpPressureTest.Win
                 }
             }
         }
-
         private void MainForm_Load(object sender, EventArgs e)
         {
+            
             BtnPauseRest();
             btnStop.Enabled = false;
             var tcpPort = UtilityExtension.GetValue(RegistryHive.LocalMachine,
@@ -275,7 +295,6 @@ namespace TcpPressureTest.Win
                 lbCrack.Text = $"System cracked,Max Port Count for {tcpPort}";
             }
         }
-
         private void SwitchCrack_CheckedChanged(object sender, EventArgs e)
         {
             if (SwitchCrack.Checked)
@@ -297,5 +316,8 @@ namespace TcpPressureTest.Win
                 }
             }
         }
+
+        #endregion
+
     }
 }
