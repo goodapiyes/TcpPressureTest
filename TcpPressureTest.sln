@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.28307.757
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpPressureTest.Win", "TcpPressureTest.Win\TcpPressureTest.Win.csproj", "{BA26AC21-07A0-4D41-AEB3-4124A1DED22F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpPressureTest.Server", "TcpPressureTest.Server\TcpPressureTest.Server.csproj", "{0F2DE26F-7458-46DB-BF85-8C4455D47C73}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcpPressureTest.Server", "TcpPressureTest.Server\TcpPressureTest.Server.csproj", "{0F2DE26F-7458-46DB-BF85-8C4455D47C73}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BeetleX", "BeetleX\BeetleX.csproj", "{9748690F-DD6F-4931-9A33-B09B218D1A55}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "压力测试工具", "压力测试工具", "{97EB21C2-1BD6-4BFF-9009-991C7287503E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azylee.Core", "Azylee.Core\Azylee.Core.csproj", "{88DC61FA-95F0-41B7-9D7D-AB0F3CBD169C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CxFlatUI", "CxFlatUI\CxFlatUI.csproj", "{818F9757-8EA0-4756-B1BC-4C18226473F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,6 +39,10 @@ Global
 		{88DC61FA-95F0-41B7-9D7D-AB0F3CBD169C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88DC61FA-95F0-41B7-9D7D-AB0F3CBD169C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{88DC61FA-95F0-41B7-9D7D-AB0F3CBD169C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{818F9757-8EA0-4756-B1BC-4C18226473F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{818F9757-8EA0-4756-B1BC-4C18226473F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{818F9757-8EA0-4756-B1BC-4C18226473F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{818F9757-8EA0-4756-B1BC-4C18226473F0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,6 +52,7 @@ Global
 		{0F2DE26F-7458-46DB-BF85-8C4455D47C73} = {BD953E94-CAE4-4DFA-AC0E-951C2E2633AC}
 		{9748690F-DD6F-4931-9A33-B09B218D1A55} = {97EB21C2-1BD6-4BFF-9009-991C7287503E}
 		{88DC61FA-95F0-41B7-9D7D-AB0F3CBD169C} = {97EB21C2-1BD6-4BFF-9009-991C7287503E}
+		{818F9757-8EA0-4756-B1BC-4C18226473F0} = {97EB21C2-1BD6-4BFF-9009-991C7287503E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {98E5904A-8F03-4E70-9EE9-0299E7A89F32}

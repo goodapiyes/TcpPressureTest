@@ -14,6 +14,7 @@ using System.Windows.Forms;
 using Azylee.Core.IOUtils.TxtUtils;
 using BeetleX;
 using BeetleX.Clients;
+using Microsoft.Win32;
 using TcpPressureTest.Win.Utility;
 
 
@@ -88,7 +89,8 @@ namespace TcpPressureTest.Win
                     client.Connect();
                 }
 
-                ControlDelegate(btnPause, () => { btnPause.Enabled = true; });
+                ControlDelegate(btnPause, () => { if(!btnStart.Enabled){ btnPause.Enabled = true; } });
+                ControlDelegate(btnPause, () => { btnStop.Enabled = true; });
             });
 
             return _connecTask;
@@ -191,6 +193,8 @@ namespace TcpPressureTest.Win
                 //发送数据包
                 task.ContinueWith(t => { SendData(); });
                 btnStart.Enabled = false;
+                btnStop.Enabled = true;
+                
             }
             catch (Exception e)
             {
@@ -252,6 +256,46 @@ namespace TcpPressureTest.Win
             }
         }
 
-        
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            BtnPauseRest();
+            btnStop.Enabled = false;
+            var tcpPort = UtilityExtension.GetValue(RegistryHive.LocalMachine,
+                @"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters", "MaxUserPort", RegistryValueKind.DWord);
+            if (string.IsNullOrWhiteSpace(tcpPort))
+            {
+                SwitchCrack.Enabled = true;
+                SwitchCrack.Checked = false;
+            }
+            else
+            {
+                SwitchCrack.Enabled = false;
+                SwitchCrack.Checked = true;
+                lbCrack.Visible = true;
+                lbCrack.Text = $"System cracked,Max Port Count for {tcpPort}";
+            }
+        }
+
+        private void SwitchCrack_CheckedChanged(object sender, EventArgs e)
+        {
+            if (SwitchCrack.Checked)
+            {
+                var tcpPort = UtilityExtension.GetValue(RegistryHive.LocalMachine,
+                    @"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters", "MaxUserPort", RegistryValueKind.DWord);
+                if (string.IsNullOrWhiteSpace(tcpPort))
+                {
+                    if (UtilityExtension.SetValue(RegistryHive.LocalMachine,
+                        @"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters", "MaxUserPort", "20000",
+                        RegistryValueKind.DWord))
+                    {
+
+                        lbCrack.Visible = true;
+                        lbCrack.Text = $"System cracked,Max Port Count for 20000";
+                        MessageBox.Show("Crack Success!");
+
+                    }
+                }
+            }
+        }
     }
 }
