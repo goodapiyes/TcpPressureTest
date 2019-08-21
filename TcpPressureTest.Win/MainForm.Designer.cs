@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.lbErrorMsg = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.lbClientCount = new System.Windows.Forms.Label();
@@ -473,6 +474,7 @@
             this.Controls.Add(this.cxFlatGroupBox1);
             this.Controls.Add(this.cxFlatStatusBar1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximumSize = new System.Drawing.Size(1920, 1040);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
