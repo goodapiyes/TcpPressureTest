@@ -49,15 +49,15 @@ namespace Azylee.Core.ProcessUtils
             {
                 if (password != null)
                 {
-                    unsafe
-                    {
-                        fixed (char* passwordChars = password)
-                        {
-                            var securePassword = new SecureString(passwordChars, password.Length);
-                            securePassword.MakeReadOnly();
-                            return securePassword;
-                        }
-                    }
+                    //unsafe
+                    //{
+                    //    fixed (char* passwordChars = password)
+                    //    {
+                    //        var securePassword = new SecureString(passwordChars, password.Length);
+                    //        securePassword.MakeReadOnly();
+                    //        return securePassword;
+                    //    }
+                    //}
                 }
             }
             catch { }

@@ -50,11 +50,18 @@ namespace TcpPressureTest.Server
 
         public override void SessionReceive(IServer server, SessionReceiveEventArgs e)
         {
-            string data = e.Stream.ToPipeStream().ReadToEnd();
-            e.Session.Stream.ToPipeStream().WriteLine(data);
-            e.Session.Stream.Flush();
-            SetPoint();
-            base.SessionReceive(server, e);
+            try
+            {
+                string data = e.Stream.ToPipeStream().ReadToEnd();
+                e.Session.Stream.ToPipeStream().WriteLine(data);
+                e.Session.Stream.Flush();
+                SetPoint();
+                base.SessionReceive(server, e);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
             
         }
     }

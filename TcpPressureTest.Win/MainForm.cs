@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -21,146 +22,236 @@ namespace TcpPressureTest.Win
     public partial class MainForm : Form
     {
         private static object locker = new object();
-        private int errorCount = 0;
-        private int sendCount = 0;
-        private int receiveCount = 0;
-        private List<AsyncTcpClient> clients= new List<AsyncTcpClient>();
-        private bool loopConStatus = true;
-        private bool loopStatus = true;
+        private List<AsyncTcpClient> _clients= new List<AsyncTcpClient>();
+        private bool _loopConStatus = true;
+        private bool _loopStatus = true;
+        private Task _connecTask;
         public MainForm()
         {
-            CheckForIllegalCrossThreadCalls = false;
             InitializeComponent();
-
-            this.tbIP.Text = ConfigTool.Get("ip");
-            this.tbPort.Text = ConfigTool.Get("port");
-            this.tbInterval.Text = ConfigTool.Get("interval");
+            //装载配置
+            InstallAppConfig();
         }
 
-        private void btnStart_Click(object sender, EventArgs eventArgs)
+        #region 功能函数
+
+        private void InitStatus()
         {
-
-
-            //复位状态
-            loopConStatus = true;
-            loopStatus = true;
-
-            if (clients.Count > 0)
-            {
-                MessageBox.Show("程序已开启,请勿重复!");
-                return;
-            }
-
-            ConnectServer();
-
-            SendData();
+            _loopConStatus = true;
+            _loopStatus = true;
+            _clients = new List<AsyncTcpClient>();
+            btnPause.Enabled = false;
         }
-
-        private void ConnectServer()
+        private void InstallAppConfig()
         {
-
-            for (int i = 0; i < 100; i++)
+            tbIP.Text = ConfigTool.Get("ip");
+            tbPort.Text = ConfigTool.Get("port");
+            tbInterval.Text = ConfigTool.Get("interval");
+            tbConCount.Text = ConfigTool.Get("connect");
+        }
+        private void UpdateAppConfig()
+        {
+            ConfigTool.Set("ip", tbIP.Text);
+            ConfigTool.Set("port", tbPort.Text);
+            ConfigTool.Set("interval", tbInterval.Text);
+            ConfigTool.Set("connect", tbConCount.Text);
+        }
+        private Task ConnectServer()
+        {
+            _connecTask = Task.Run(() =>
             {
-                if (!loopConStatus)
-                    break;
-                AsyncTcpClient client = SocketFactory.CreateClient<AsyncTcpClient>(this.tbIP.Text, this.tbPort.Text.ToInt());
-                client.ClientError = (o, e) =>
-                {
-                    lock (locker)
-                    {
-                        errorCount++;
-                        this.lbErrorCount.Text = errorCount.ToString();
-                        loopConStatus = false;
-                    }
-                };
-                client.Receive = (o, e) =>
-                {
-                    string data = e.Stream.ToPipeStream().ReadToEnd();
-                    lock (locker)
-                    {
-                        receiveCount++;
-                        this.lbReceiveDataCount.Text = receiveCount.ToString();
-                    }
-                };
 
-                client.Connect();
-                clients.Add(client);
-                this.lbClientCount.Text = clients.Count.ToString();
-            }
+                var ip = tbIP.Text;
+                var port = tbPort.Text.ToInt();
+                var con = tbConCount.Text.ToInt();
+                for (int i = 0; i < con; i++)
+                {
+                    if (!_loopConStatus)
+                        break;
+                    AsyncTcpClient client = SocketFactory.CreateClient<AsyncTcpClient>(ip, port);
+                    client.ClientError = (o, e) =>
+                    {
+                        ControlIncrement(lbErrorCount);
+                        ControlAssign(lbErrorMsg, e.Message);
+                    };
+                    client.Receive = (o, e) =>
+                    {
+                        string data = e.Stream.ToPipeStream().ReadToEnd();
+                        ControlIncrement(lbReceiveDataCount);
+
+                    };
+                    client.Connected = (c) =>
+                    {
+                        ControlIncrement(lbClientCount);
+                        _clients.Add(client);
+                    };
+                    client.Connect();
+                }
+
+                ControlDelegate(btnPause, () => { btnPause.Enabled = true; });
+            });
+
+            return _connecTask;
         }
         private void SendData()
         {
-            foreach (var client in clients)
+            foreach (var client in _clients)
             {
-                Task.Run(() =>
+                Task task = Task.Run(() =>
                 {
                     try
                     {
                         var pipestream = client.Stream.ToPipeStream();
-                        while (loopStatus)
+                        var interval = this.tbInterval.Text.ToInt();
+                        var text = new string('x', 1000);
+                        while (_loopStatus)
                         {
-                            Thread.Sleep(50);
-                            var text = new string('x', 20);
+                            Thread.Sleep(interval < 100 ? 100 : interval);
                             var data = pipestream.ReadToEnd();
                             pipestream.WriteUTF(text);
                             pipestream.Flush();
-                            lock (locker)
-                            {
-                                sendCount++;
-                                this.lbSendDataCount.Text = sendCount.ToString();
-                            }
+                            ControlIncrement(lbSendDataCount);
                         }
                     }
                     catch (Exception e)
                     {
-                        this.lbErrorCount.Text = errorCount.ToString();
+                        ControlIncrement(lbErrorCount);
+                        ControlAssign(lbErrorMsg, e.Message);
                     }
                 });
             }
         }
+        private void ControlDelegate(Control control, Action action)
+        {
+            if (control.InvokeRequired)
+            {
+                control.Invoke(new Action(() =>
+                {
+                    action.Invoke();
+                }));
+            }
+            else
+                action.Invoke();
+        }
+        private void ControlEnabled(Control control, bool b)
+        {
+            if (control.InvokeRequired)
+            {
+                control.Invoke(new Action(() =>
+                {
+                    control.Enabled = b;
+                }));
+            }
+            else
+                control.Enabled = b;
+        }
+        private void ControlIncrement(Control control)
+        {
+            if (control.InvokeRequired)
+            {
+                control.Invoke(new Action(() =>
+                {
+                    control.Text = (control.Text.ToInt() + 1).ToString();
+                }));
+            }
+            else
+                control.Text = (control.Text.ToInt() + 1).ToString();
+        }
+        private void ControlAssign(Control control, object value)
+        {
+            if (control.InvokeRequired)
+            {
+                control.Invoke(new Action(() =>
+                {
+                    control.Text = value.ToString();
+                }));
+            }
+            else
+                control.Text = value.ToString();
+        }
 
+        private void BtnPauseRest()
+        {
+            btnPause.Text = "Pause";
+            btnPause.Enabled = false;
+        }
+        #endregion
+
+
+        private void btnStart_Click(object sender, EventArgs eventArgs)
+        {
+            try
+            {
+                //保存用户当前操作配置数据
+                UpdateAppConfig();
+                //初始化程序状态
+                InitStatus();
+                //连接服务器
+                var task = ConnectServer();
+                //发送数据包
+                task.ContinueWith(t => { SendData(); });
+                btnStart.Enabled = false;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+                ControlAssign(lbErrorMsg, e.Message);
+            }
+        }
         private void btnPause_Click(object sender, EventArgs e)
         {
-            if (loopStatus)
+            if (_loopStatus)
             {
-                loopStatus = false;
-                this.btnPause.Text = "继续发送";
+                _loopStatus = false;
+                this.btnPause.Text = "Continue";
             }
             else
             {
-                loopStatus = true;
-                this.btnPause.Text = "暂停发送";
+                _loopStatus = true;
+                this.btnPause.Text = "Pause";
                 SendData();
             }
         }
-
-        private void btnClose_Click(object sender, EventArgs e)
+        private void btnStop_Click(object sender, EventArgs eventArgs)
         {
-            loopStatus = false;
-
-            Task.Run(() =>
+            try
             {
-                for (int i = clients.Count - 1; i >= 0; i--)
+                btnStop.Enabled = false;
+                _loopConStatus = false;
+                _loopStatus = false;
+                Thread.Sleep(1000);
+                for (int i = _clients.Count - 1; i >= 0; i--)
                 {
-                    Thread.Sleep(50);
-                    clients[i].DisConnect();
-                    clients.Remove(clients[i]);
-                    this.lbClientCount.Text = clients.Count.ToString();
+                    _clients[i].DisConnect();
+                    _clients.Remove(_clients[i]);
+                    ControlAssign(lbClientCount, _clients.Count);
                 }
-            });
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+                ControlAssign(lbErrorMsg, e.Message);
+            }
+            finally
+            {
+                BtnPauseRest();
+                btnStop.Enabled = true;
+                btnStart.Enabled = true;
+            }
         }
-
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            loopStatus = false;
-            if (clients.Count>0)
+            _loopStatus = false;
+            if (_clients.Count>0)
             {
-                for (int i = clients.Count - 1; i >= 0; i--)
+                for (int i = _clients.Count - 1; i >= 0; i--)
                 {
-                    clients[i].DisConnect();
-                    clients.Remove(clients[i]);
+                    _clients[i].DisConnect();
+                    _clients.Remove(_clients[i]);
                 }
             }
         }
+
+        
     }
 }
