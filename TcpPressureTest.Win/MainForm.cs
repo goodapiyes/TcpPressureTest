@@ -304,12 +304,12 @@ namespace TcpPressureTest.Win
                 if (string.IsNullOrWhiteSpace(tcpPort))
                 {
                     if (UtilityExtension.SetValue(RegistryHive.LocalMachine,
-                        @"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters", "MaxUserPort", "20000",
+                        @"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters", "MaxUserPort", "60000",
                         RegistryValueKind.DWord))
                     {
 
                         lbCrack.Visible = true;
-                        lbCrack.Text = $"System cracked,Max Port Count for 20000";
+                        lbCrack.Text = $"System cracked,Max Port Count for 60000";
                         MessageBox.Show("Crack Success!");
 
                     }
